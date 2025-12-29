@@ -222,14 +222,14 @@ static void setup(IhtCache cache) {
         }
     }
 
-    int na_size = cache->fast_value ? sizeof(IhtCacheFastValue) : cache->value_size ;
-    cache -> na_value = calloc(1, na_size) ;
 }
 
 static void allocate(IhtCache cache) {
     // Memory allocation logic for entries and items
     cache->entries = calloc(cache->max_entries, sizeof(*cache->entries));
     cache->items = calloc(cache->max_items, cache->item_size);
+    int na_size = cache->fast_value ? sizeof(IhtCacheFastValue) : cache->value_size ;
+    if ( !cache->na_value) cache->na_value = calloc(1, na_size) ;
 }
 
 static void deallocate(IhtCache cache) {
