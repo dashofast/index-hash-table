@@ -55,6 +55,7 @@
 build/
 dist/
 bin/
+docs/html/
 
 # IDE and editor files
 #.vscode

@@ -1,0 +1,33 @@
+# --- Project -------------------------------------------------
+
+PROJECT_NAME           = "MyLib"
+PROJECT_BRIEF          = "Public C API"
+OUTPUT_DIRECTORY       = docs
+
+# --- Input ---------------------------------------------------
+
+INPUT                  = include
+FILE_PATTERNS          = *.h
+RECURSIVE              = YES
+
+# --- Extraction ----------------------------------------------
+
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+
+# --- Warnings -----------------------------------------------
+
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+
+# --- Output --------------------------------------------------
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+# --- Graphs (optional) --------------------------------------
+
+HAVE_DOT               = YES
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
