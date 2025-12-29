@@ -1,6 +1,3 @@
-# Prerequisites
-*.d
-
 # Object files
 *.o
 *.ko
@@ -24,6 +21,13 @@
 
 # Shared objects (inc. Windows DLLs)
 *.dll
+# Compiled object files
+*.o
+*.obj
+
+# Compiled libraries
+*.a
+*.lib
 *.so
 *.so.*
 *.dylib
@@ -42,14 +46,38 @@
 *.idb
 *.pdb
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
 # debug information files
 *.dwo
+*.gch
+*.pch
+
+# Build directories
+build/
+dist/
+bin/
+
+# IDE and editor files
+#.vscode
+#.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.code-workspace
+
+# CMake build artifacts (if using CMake)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Compilation database
+compile_commands.json
+
+# Dependencies (if using package managers)
+.deps/
+*.d
+
+# Temporary files
+*.tmp
+*.log
