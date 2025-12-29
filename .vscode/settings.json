@@ -1,0 +1,4 @@
+{
+    "cmake.sourceDirectory": "/home/user/github/index-hash-table",
+    "C_Cpp.default.compileCommands": "build/compile_commands.json"
+}
