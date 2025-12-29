@@ -553,7 +553,7 @@ IhtCacheFastValue ihtCacheGet_Fast(IhtCache cache, IhtCacheFastKey key)
 static void print_counter(FILE *fp, const char *label, IhtCounter counter)
 {
     double ratio = counter.count>0 ? (double) counter.scans/counter.count : -1 ;
-    fprintf(fp, "   %s - count=%d, scans=%d, ratio=%.2f\n", label, counter.count, counter.scans, ratio) ;
+    fprintf(fp, "   %s: %d (scans=%d, ratio=%.2f)\n", label, counter.count, counter.scans, ratio) ;
 }
 
 void ihtCachePrintStats(FILE *fp, IhtCache cache, const char *label)

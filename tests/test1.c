@@ -116,6 +116,26 @@ void test_cache_exp(void)
     ihtCacheDestroy(c) ;
 }
 
+void test_cache_half(void)
+{
+    double start_t = time_hires() ;
+    IhtCache c = ihtCacheCreate(N/2, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    double s = 0 ;
+    for (int r = 0 ; r<R ; r++ ) {
+        s =  0 ;
+        int b = r%100 ;
+        for (int i=0 ; i<N ; i++ ) {
+            double x = vv(i+b, 100+N) ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
+        }
+    }
+    double end_t = time_hires() ;
+    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    ihtCachePrintStats(stdout, c, __func__) ;
+    ihtCacheDestroy(c) ;
+}
+
 void test_cache_shift(void)
 {
     double start_t = time_hires() ;
@@ -137,16 +157,36 @@ void test_cache_shift(void)
     ihtCacheDestroy(c) ;
 }
 
-void test_cache_large(void)
+void test_cache_noise(void)
 {
     double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N/2, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
         s =  0 ;
         int b = (r%100)+(r/1000)*1000 ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N) ;
+            double x = i ? vv(i+b, 100+N) : vv(r, R) ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
+        }
+    }
+    double end_t = time_hires() ;
+    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    ihtCachePrintStats(stdout, c, __func__) ;
+    ihtCacheDestroy(c) ;
+}
+
+void test_cache_fuzzy(void)
+{
+    double start_t = time_hires() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    double s = 0 ;
+    for (int r = 0 ; r<R ; r++ ) {
+        s =  0 ;
+        int b = (r%100)+(r/1000)*1000 ;
+        for (int i=0 ; i<N ; i++ ) {
+            double x = i%10 ? vv(i+b, 100+N) : vv(i+r, i+R+10) ;
             double y = ihtCacheGet_D_D(c, x) ;
             s += y ;
         }
@@ -164,7 +204,9 @@ int main() {
     test_cache_nop() ;
     test_cache_exp() ;
     test_cache_shift() ;
-    test_cache_large() ;
+    test_cache_half() ;
+    test_cache_noise() ;
+    test_cache_fuzzy() ;
     return 0;
 }
 
