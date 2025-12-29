@@ -465,7 +465,7 @@ double ihtCacheGetMaxLoadFactor(IhtCache cache)
 {
     return cache->max_load_factor ;
 }
-void IhtCacheSetMaxLoadFactor(IhtCache cache, double max_load_factor)
+void ihtCacheSetMaxLoadFactor(IhtCache cache, double max_load_factor)
 {
     cache->max_load_factor = max_load_factor ;
 }

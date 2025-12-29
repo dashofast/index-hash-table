@@ -21,7 +21,7 @@ static double time_mono(void)
     return now - base_time ;
 }
 
-#define R 100000
+#define R 10000
 #define N 1000
 
 static inline double vv(int pos, int count)
@@ -34,7 +34,6 @@ void test_nop(void)
     double start_t = time_hires() ;
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+r%100, 100+N) ;
             double y = x+x ;
@@ -42,7 +41,7 @@ void test_nop(void)
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N);
 }
 
 void test_exp(void)
@@ -50,7 +49,6 @@ void test_exp(void)
     double start_t = time_hires() ;
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+r%100, 100+N) ;
             double y = exp(x) ;
@@ -58,7 +56,7 @@ void test_exp(void)
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
 }
 
 static bool nop_wrapper(void *cxt, const void *param, void *result)
@@ -75,7 +73,6 @@ void test_cache_nop(void)
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), nop_wrapper, NULL);
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+r%100, 100+N) ;
             double y = ihtCacheGet_D_D(c, x) ;
@@ -83,7 +80,7 @@ void test_cache_nop(void)
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
 }
@@ -102,7 +99,6 @@ void test_cache_exp(void)
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+b, 100+N) ;
@@ -111,7 +107,7 @@ void test_cache_exp(void)
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
 }
@@ -122,7 +118,6 @@ void test_cache_half(void)
     IhtCache c = ihtCacheCreate(N/2, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+b, 100+N) ;
@@ -131,7 +126,28 @@ void test_cache_half(void)
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
+    ihtCachePrintStats(stdout, c, __func__) ;
+    ihtCacheDestroy(c) ;
+}
+
+void test_cache_pack(void)
+{
+    double start_t = time_hires() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    ihtCacheSetMaxLoadFactor(c, 0.75) ;
+    ihtCacheReconfigure(c);
+    double s = 0 ;
+    for (int r = 0 ; r<R ; r++ ) {
+        int b = r%100 ;
+        for (int i=0 ; i<N ; i++ ) {
+            double x = vv(i+b, 100+N) ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
+        }
+    }
+    double end_t = time_hires() ;
+    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
 }
@@ -143,16 +159,15 @@ void test_cache_shift(void)
     double s = 0 ;
     double inv_n = 1.0/N ;
     for (int r = 0 ; r<R ; r++ ) {
-        s = 0 ;
-        int b = (r%100)+(r/1000)*1000 ;
+        int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+R+N) ;
+            double x = vv(i+b, R+N) ;
             double y = ihtCacheGet_D_D(c, x);
             s += y ;
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
 }
@@ -163,16 +178,15 @@ void test_cache_noise(void)
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
-        int b = (r%100)+(r/1000)*1000 ;
+        int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = i ? vv(i+b, 100+N) : vv(r, R) ;
+            double x = i ? vv(i+b, R+N) : vv(r, R+1) ;
             double y = ihtCacheGet_D_D(c, x) ;
             s += y ;
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
 }
@@ -183,16 +197,15 @@ void test_cache_fuzzy(void)
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        s =  0 ;
-        int b = (r%100)+(r/1000)*1000 ;
+        int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = i%10 ? vv(i+b, 100+N) : vv(i+r, i+R+10) ;
+            double x = i%2 ? vv(i+b, N+R) : vv(i+r, N+R+1) ;
             double y = ihtCacheGet_D_D(c, x) ;
             s += y ;
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s) ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
 }
@@ -204,6 +217,7 @@ int main() {
     test_cache_nop() ;
     test_cache_exp() ;
     test_cache_shift() ;
+    test_cache_pack() ;
     test_cache_half() ;
     test_cache_noise() ;
     test_cache_fuzzy() ;
