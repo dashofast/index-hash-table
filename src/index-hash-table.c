@@ -146,11 +146,11 @@ static inline uint32_t fast_key_hash(IhtCacheFastKey key)
 
 static inline uint32_t key_hash(IhtCache cache, const void *key)
 {
-    if ( cache->fast_key ) {
-        return fast_key_hash( *(IhtCacheFastKey *) key) ;
-    } else if ( cache->short_key ) {
+    if ( cache->short_key ) {
         memcpy( &cache->work_key, key, cache->key_size) ;
         return fast_key_hash ( cache->work_key) ;
+    } else if ( cache->fast_key ) {
+        return fast_key_hash( *(IhtCacheFastKey *) key) ;
     }
 
     // Use simple hashing with via rotation
