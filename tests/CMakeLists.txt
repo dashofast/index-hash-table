@@ -1,8 +1,12 @@
-add_executable(test_iht1 test-iht1.c)
+set(TESTS test_iht1 test_iht2)
 
-target_link_libraries(test_iht1 PRIVATE index-hash-table m)
+foreach(spec ${TESTS})
+    add_executable(${spec} ${spec}.c)
 
-target_compile_definitions(test_iht1 PRIVATE _DEFAULT_SOURCE _POSIX_C_SOURCE=200809L)
-target_include_directories(test_iht1 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_link_libraries(${spec} PRIVATE index-hash-table m)
 
-add_test(NAME IndexHashTableTests COMMAND test_iht1)
+    target_compile_definitions(${spec} PRIVATE _DEFAULT_SOURCE _POSIX_C_SOURCE=200809L)
+    target_include_directories(${spec} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+
+    add_test(NAME ${spec} COMMAND ${spec})
+endforeach()
