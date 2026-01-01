@@ -282,14 +282,32 @@ static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
     unsigned index = hash & cache->entries_mask;
     IhtEntry e = entry_addr(cache, index) ;
     cache->stats.lookups++ ;
-    int scans = 0 ;
+
+    // Unroll the first check, mostly likely to be a hit
+    SlotState state = e->state ;
+    if ( UNLIKELY(empty_slot(state)) ) {
+        bump_counter(&cache->stats.misses, 0);
+        return NULL ;
+    }
+
+    if ( LIKELY(e->hash_value == hash) ) {
+        if ( LIKELY(fast_key_equals( cache->items[e->item_index].key, key)) ) {
+            bump_counter(&cache->stats.hits, 0) ;
+            if ( state < SLOT_MAX_AGE ) e->state = state+1 ;
+            return e ;
+        }
+    }
+
+    index = next_entry(cache, index) ;
+    e = entry_addr(cache, index) ;
+    int scans = 1 ;
 
     while ( !empty_slot(e->state) ) {
         if ( LIKELY(e->hash_value == hash) ) {
             if ( LIKELY(fast_key_equals( cache->items[e->item_index].key, key)) ) {
                 touch_entry(cache, e, scans);
                 return e ;
-            }
+            }   
         }   
         index = next_entry(cache, index) ;
         e = entry_addr(cache, index) ;
