@@ -1,7 +1,7 @@
 /**
- * @file test_iht_small.c
+ * @file test_iht_fast.c
  * @author dasho fast (dasho.fast@gmail.com)
- * @brief test iht API with lot of small objects (10K, double key, double value)
+ * @brief Test iht cache fast key/value API (10K, double key, double value)
  * @version 0.1
  * @date 2026-01-01
  * 
@@ -9,7 +9,8 @@
  * 
  */
 
- #include <stdio.h>
+
+#include <stdio.h>
 #include <math.h>
 
 #include <time.h>
@@ -113,8 +114,8 @@ void test_cache_exp(void)
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+b, 100+N) ;
-            double *y = ihtCacheGet(c, &x) ;
-            s += *y ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
         }
     }
     double end_t = time_hires() ;
@@ -132,8 +133,8 @@ void test_cache_half(void)
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+b, 100+N) ;
-            double *y = ihtCacheGet(c, &x) ;
-            s += *y ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
         }
     }
     double end_t = time_hires() ;
@@ -153,8 +154,8 @@ void test_cache_pack(void)
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+b, 100+N) ;
-           double *y = ihtCacheGet(c, &x) ;
-            s += *y ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
         }
     }
     double end_t = time_hires() ;
@@ -173,8 +174,8 @@ void test_cache_shift(void)
         int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = vv(i+b, R+N) ;
-            double *y = ihtCacheGet(c, &x) ;
-            s += *y ;
+            double y = ihtCacheGet_D_D(c, x);
+            s += y ;
         }
     }
     double end_t = time_hires() ;
@@ -192,8 +193,8 @@ void test_cache_noise(void)
         int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = i ? vv(i+b, R+N) : vv(r, R+1) ;
-            double *y = ihtCacheGet(c, &x) ;
-            s += *y ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
         }
     }
     double end_t = time_hires() ;
@@ -211,8 +212,8 @@ void test_cache_fuzzy(void)
         int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
             double x = i%2 ? vv(i+b, N+R) : vv(i+r, N+R+1) ;
-            double *y = ihtCacheGet(c, &x) ;
-            s += *y ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
         }
     }
     double end_t = time_hires() ;
