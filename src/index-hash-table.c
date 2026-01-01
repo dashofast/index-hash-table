@@ -370,7 +370,7 @@ static IhtEntry alloc_new_entry(IhtCache cache, const void *key)
         // Very unlikely, key may already be in the table, in this case, we need to undo
         // the removal - restore the victim, and assume the existing location is where
         // the item will be inserted.
-        if ( e->hash_value == hash_value && key_equals(cache, item_key(cache, e->item_index), key)) {
+        if ( UNLIKELY(e->hash_value == hash_value && key_equals(cache, item_key(cache, e->item_index), key))) {
             // Should we update existing entry?
             // In general, not expecting to be here
             if ( victim ) {
@@ -561,7 +561,7 @@ void *ihtCacheGet(IhtCache cache, const void *key)
 IhtCacheFastValue ihtCacheGet_Fast(IhtCache cache, IhtCacheFastKey key)
 {
     IhtEntry e = fast_lookup_entry(cache, key) ;
-    if ( !e ) {
+    if ( UNLIKELY(!e) ) {
         e = calc_new_entry(cache, &key) ;
         if ( UNLIKELY(!e) ) return *(IhtCacheFastValue *) cache->na_value ;
     }
