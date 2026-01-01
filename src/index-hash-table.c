@@ -280,7 +280,7 @@ static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
     // Logic to look up an entry by key
     unsigned hash = fast_key_hash(key);
     unsigned index = hash & cache->entries_mask;
-    IhtEntry e = entry_addr(cache, index) ;
+    IhtEntry e = &cache->entries[index] ;
     cache->stats.lookups++ ;
 
     // Unroll the first check, mostly likely to be a hit
@@ -299,7 +299,7 @@ static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
     }
 
     index = next_entry(cache, index) ;
-    e = entry_addr(cache, index) ;
+    e = &cache->entries[index] ;
     int scans = 1 ;
 
     while ( !empty_slot(e->state) ) {
@@ -310,7 +310,7 @@ static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
             }   
         }   
         index = next_entry(cache, index) ;
-        e = entry_addr(cache, index) ;
+        e = &cache->entries[index] ;
         scans++ ;
     }
     bump_counter(&cache->stats.misses, scans);
