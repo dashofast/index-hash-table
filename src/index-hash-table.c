@@ -565,7 +565,7 @@ IhtCacheFastValue ihtCacheGet_Fast(IhtCache cache, IhtCacheFastKey key)
         e = calc_new_entry(cache, &key) ;
         if ( UNLIKELY(!e) ) return *(IhtCacheFastValue *) cache->na_value ;
     }
-    return *(IhtCacheFastValue *) item_value(cache, e->item_index) ;
+    return cache->items[e->item_index].value ;
 }
 
 static void print_counter(FILE *fp, const char *label, IhtCounter counter)
