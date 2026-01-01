@@ -1,4 +1,4 @@
-set(TESTS test_iht1 test_iht2)
+set(TESTS test_iht_fast test_iht_small test_iht_large test_iht_fast_10k test_iht_fast_100k)
 
 foreach(spec ${TESTS})
     add_executable(${spec} ${spec}.c)

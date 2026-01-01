@@ -210,6 +210,7 @@ static void setup(IhtCache cache) {
     cache->item_size = sizeof(struct iht_item);
 
     if ( !fast_mode ) {
+        cache->item_size = cache->key_size + cache->value_size ;
         int max_align = alignof(max_align_t) ;
         if ( cache->key_offset < cache->value_offset && !cache->fast_key) {
             int adj = max_align*(1+(cache->value_size - sizeof(IhtCacheFastValue)-1)/max_align) ;
