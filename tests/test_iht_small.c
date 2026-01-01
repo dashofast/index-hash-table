@@ -1,4 +1,13 @@
-#include <stdio.h>
+/**
+ * @file test_iht_small.c
+ * @author dasho fast (dasho.fast@gmail.com)
+ * @brief test iht API with small objects (1K, double key, double value)
+ * @version 0.1
+ * @date 2026-01-01
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #include <math.h>
 
 #include <time.h>
