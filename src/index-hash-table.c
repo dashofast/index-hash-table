@@ -280,19 +280,37 @@ static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
     // Logic to look up an entry by key
     unsigned hash = fast_key_hash(key);
     unsigned index = hash & cache->entries_mask;
-    IhtEntry e = entry_addr(cache, index) ;
+    IhtEntry e = &cache->entries[index] ;
     cache->stats.lookups++ ;
-    int scans = 0 ;
+
+    // Unroll the first check, mostly likely to be a hit
+    SlotState state = e->state ;
+    if ( UNLIKELY(empty_slot(state)) ) {
+        bump_counter(&cache->stats.misses, 0);
+        return NULL ;
+    }
+
+    if ( LIKELY(e->hash_value == hash) ) {
+        if ( LIKELY(fast_key_equals( cache->items[e->item_index].key, key)) ) {
+            bump_counter(&cache->stats.hits, 0) ;
+            if ( state < SLOT_MAX_AGE ) e->state = state+1 ;
+            return e ;
+        }
+    }
+
+    index = next_entry(cache, index) ;
+    e = &cache->entries[index] ;
+    int scans = 1 ;
 
     while ( !empty_slot(e->state) ) {
         if ( LIKELY(e->hash_value == hash) ) {
             if ( LIKELY(fast_key_equals( cache->items[e->item_index].key, key)) ) {
                 touch_entry(cache, e, scans);
                 return e ;
-            }
+            }   
         }   
         index = next_entry(cache, index) ;
-        e = entry_addr(cache, index) ;
+        e = &cache->entries[index] ;
         scans++ ;
     }
     bump_counter(&cache->stats.misses, scans);
@@ -352,7 +370,7 @@ static IhtEntry alloc_new_entry(IhtCache cache, const void *key)
         // Very unlikely, key may already be in the table, in this case, we need to undo
         // the removal - restore the victim, and assume the existing location is where
         // the item will be inserted.
-        if ( e->hash_value == hash_value && key_equals(cache, item_key(cache, e->item_index), key)) {
+        if ( UNLIKELY(e->hash_value == hash_value && key_equals(cache, item_key(cache, e->item_index), key))) {
             // Should we update existing entry?
             // In general, not expecting to be here
             if ( victim ) {
@@ -543,11 +561,11 @@ void *ihtCacheGet(IhtCache cache, const void *key)
 IhtCacheFastValue ihtCacheGet_Fast(IhtCache cache, IhtCacheFastKey key)
 {
     IhtEntry e = fast_lookup_entry(cache, key) ;
-    if ( !e ) {
+    if ( UNLIKELY(!e) ) {
         e = calc_new_entry(cache, &key) ;
         if ( UNLIKELY(!e) ) return *(IhtCacheFastValue *) cache->na_value ;
     }
-    return *(IhtCacheFastValue *) item_value(cache, e->item_index) ;
+    return cache->items[e->item_index].value ;
 }
 
 static void print_counter(FILE *fp, const char *label, IhtCounter counter)
