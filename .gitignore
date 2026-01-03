@@ -82,4 +82,4 @@ compile_commands.json
 # Temporary files
 *.tmp
 perf.data*
-
+callgrind.out.*

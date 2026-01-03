@@ -79,6 +79,14 @@ static bool nop_wrapper(void *cxt, const void *param, void *result)
     return true ;
 }
 
+static bool exp_wrapper(void *cxt, const void *param, void *result)
+{
+    double x = *(double*) param ;
+    double v = exp(x) ;
+    *(double *) result = v ;
+    return true ;
+}
+
 void test_cache_nop(void)
 {
     double start_t = time_hires() ;
@@ -93,17 +101,9 @@ void test_cache_nop(void)
         }
     }
     double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
     ihtCachePrintStats(stdout, c, __func__) ;
     ihtCacheDestroy(c) ;
-}
-
-static bool exp_wrapper(void *cxt, const void *param, void *result)
-{
-    double x = *(double*) param ;
-    double v = exp(x) ;
-    *(double *) result = v ;
-    return true ;
 }
 
 void test_cache_exp(void)
@@ -224,7 +224,6 @@ void test_cache_fuzzy(void)
 }
 
 int main() {
-
     test_nop() ;
     test_exp() ;
     test_cache_nop() ;
