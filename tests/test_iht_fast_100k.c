@@ -79,30 +79,31 @@ static bool nop_wrapper(void *cxt, const void *param, void *result)
     return true ;
 }
 
-void test_cache_nop(void)
-{
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), nop_wrapper, NULL);
-    double s = 0 ;
-    for (int r = 0 ; r<R ; r++ ) {
-        for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+r%100, 100+N) ;
-            double y = ihtCacheGet_D_D(c, x) ;
-            s += y ;
-        }
-    }
-    double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
-    ihtCacheDestroy(c) ;
-}
-
 static bool exp_wrapper(void *cxt, const void *param, void *result)
 {
     double x = *(double*) param ;
     double v = exp(x) ;
     *(double *) result = v ;
     return true ;
+}
+
+void test_cache_nop(void)
+{
+    double start_t = time_hires() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), nop_wrapper, NULL);
+    double s = 0 ;
+    for (int r = 0 ; r<R ; r++ ) {
+        int b = r%100 ;
+        for (int i=0 ; i<N ; i++ ) {
+            double x = vv(i+b, 100+N) ;
+            double y = ihtCacheGet_D_D(c, x) ;
+            s += y ;
+        }
+    }
+    double end_t = time_hires() ;
+    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
+    ihtCachePrintStats(stdout, c, __func__) ;
+    ihtCacheDestroy(c) ;
 }
 
 void test_cache_exp(void)
@@ -211,7 +212,7 @@ void test_cache_fuzzy(void)
     for (int r = 0 ; r<R ; r++ ) {
         int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = i%2 ? vv(i+b, N+R) : vv(i+r, N+R+1) ;
+            double x = i%3 ? vv(i+b, N+R) : vv(i+r, N+R+1) ;
             double y = ihtCacheGet_D_D(c, x) ;
             s += y ;
         }
@@ -223,7 +224,6 @@ void test_cache_fuzzy(void)
 }
 
 int main() {
-
     test_nop() ;
     test_exp() ;
     test_cache_nop() ;

@@ -29,7 +29,7 @@ static inline bool empty_slot(SlotState slot_state) {
 typedef struct iht_entry {
     uint32_t hash_value ;  // cached hash value
     unsigned int item_index ;
-    SlotState state:8 ;
+//    SlotState state:8 ;
 } *IhtEntry ;
 
 typedef struct iht_item {
@@ -71,14 +71,16 @@ struct iht_cache {
     int item_size ;
     int key_offset ;
     int value_offset ;
-    int victim_index ;          // index of next victim for eviction
+    int evict_index ;          // index of next victim for eviction
 
     void *na_value ;            // value representing NA
     IhtCacheFastKey work_key ;  // Zero-padded key
 
     // Storage
+    unsigned char *states ;     // [max entries]
     IhtEntry entries ;          // [max_entries]
     IhtItem items ;             // [max_items] of item_size bytes
+    
 
     struct iht_stats stats ;
 } ;
@@ -96,6 +98,14 @@ static inline void *item_value(IhtCache cache, int item_index) {
 
 static inline void *item_key(IhtCache cache, int item_index) {
     return ((char*) item_addr(cache, item_index)) + cache->key_offset ;
+}
+
+static inline bool is_slot_empty(IhtCache cache, unsigned entry_index) {
+    return empty_slot( (SlotState) cache->states[entry_index] ) ;
+}
+
+static inline bool is_slot_used(IhtCache cache, unsigned entry_index) {
+    return !empty_slot( (SlotState) cache->states[entry_index] ) ;
 }
 
 static inline IhtEntry entry_addr(IhtCache cache, unsigned entry_index) {
@@ -156,12 +166,19 @@ static inline uint32_t key_hash(IhtCache cache, const void *key)
     // Use simple hashing with via rotation
     static uint64_t SEED_64 = 0x9e3779b97f4a7c15ULL ;
 
-    const uint64_t *data = key ;
-    int count = cache->key_size/sizeof(*data) ;
-    uint64_t h = SEED_64 ;
-    for (int i = 0 ; i<count ; i++ ) {
-        h ^= data[i];
+    int bytes = cache->key_size ;
+    uint64_t h = SEED_64 + bytes ;
+    int pos = 0 ;
+    for (pos = 0 ; pos<bytes ; pos+= sizeof(h) ) {
+        h ^= *(uint64_t *) ((char *) key + pos ) ;
         h *= 0x9e3779b97f4a7c15ULL;
+    }
+    int n_tail = bytes - pos ;
+    if ( n_tail > 0 ) {
+        uint64_t tail = 0 ;
+        memcpy( &tail, (char *) key + pos, n_tail ) ;
+        h ^= tail ;
+        h *= 0x9e3779b97f4a7c15ULL;        
     }
 
     // final avalanche + reduce to 32-bit
@@ -176,10 +193,10 @@ static inline void bump_counter(IhtCounter *c, int scans)
     c->scans += scans ;  
 }
 
-static inline void touch_entry(IhtCache cache, IhtEntry e, int scans) {
-    bump_counter(&cache->stats.hits, scans) ;
-    if ( e->state < SLOT_MAX_AGE ) {
-        e->state += 1 ;
+static inline void touch_entry(IhtCache cache, int index) {
+    SlotState state = cache->states[index] ;
+    if ( state < SLOT_MAX_AGE ) {
+        cache->states[index] = state+1 ;
     }
 }
 
@@ -229,6 +246,7 @@ static void allocate(IhtCache cache) {
     // Memory allocation logic for entries and items
     cache->entries = calloc(cache->max_entries, sizeof(*cache->entries));
     cache->items = calloc(cache->max_items, cache->item_size);
+    cache->states = calloc(cache->max_entries, sizeof(*cache->states));
     int na_size = cache->fast_value ? sizeof(IhtCacheFastValue) : cache->value_size ;
     if ( !cache->na_value) cache->na_value = calloc(1, na_size) ;
 }
@@ -238,14 +256,16 @@ static void deallocate(IhtCache cache) {
     cache->entries = NULL;
     free(cache->items);
     cache->items = NULL;
+    free(cache->states);
+    cache->states = NULL;
 }
 
 static void remove_all(IhtCache cache) {
     // Logic to remove all entries from the cache
     if ( cache->value_destroyer ) {
         for (int i = 0; i < cache->max_entries; i++) {
-            IhtEntry e = entry_addr(cache, i);
-            if ( e->state > SLOT_REMOVED ) {
+            if ( !is_slot_empty(cache, i) ) {
+                IhtEntry e = entry_addr(cache, i);
                 cache->value_destroyer(cache->cxt, item_value(cache, e->item_index));
             }
         }
@@ -253,6 +273,7 @@ static void remove_all(IhtCache cache) {
     cache->item_count = 0;
     bzero(cache->entries, cache->max_entries * sizeof(*cache->entries));
     bzero(cache->items, cache->max_items * cache->item_size);
+    bzero(cache->states, cache->max_entries * sizeof(*cache->states));
 }
 
 static IhtEntry lookup_entry(IhtCache cache, const void *key) {
@@ -262,10 +283,11 @@ static IhtEntry lookup_entry(IhtCache cache, const void *key) {
     IhtEntry e = entry_addr(cache, index) ;
     cache->stats.lookups++ ;
     int scans = 0 ;
-    while ( !empty_slot(e->state) ) {
+    while ( is_slot_used(cache, index) ) {
         if ( e->hash_value == hash ) {
             if ( key_equals(cache, item_key(cache, e->item_index), key) ) {
-                touch_entry(cache, e, scans);
+                bump_counter(&cache->stats.hits, scans) ;
+                touch_entry(cache, index) ;
                 return e ;
             }
         }
@@ -281,101 +303,105 @@ static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
     // Logic to look up an entry by key
     unsigned hash = fast_key_hash(key);
     unsigned index = hash & cache->entries_mask;
-    IhtEntry e = &cache->entries[index] ;
     cache->stats.lookups++ ;
 
     // Unroll the first check, mostly likely to be a hit
-    SlotState state = e->state ;
+    SlotState state = cache->states[index] ;
     if ( UNLIKELY(empty_slot(state)) ) {
         bump_counter(&cache->stats.misses, 0);
         return NULL ;
     }
 
+    IhtEntry e = &cache->entries[index] ;
     if ( LIKELY(e->hash_value == hash) ) {
         if ( LIKELY(fast_key_equals( cache->items[e->item_index].key, key)) ) {
             bump_counter(&cache->stats.hits, 0) ;
-            if ( state < SLOT_MAX_AGE ) e->state = state+1 ;
+            if ( state < SLOT_MAX_AGE ) cache->states[index] = state+1 ;
             return e ;
         }
     }
 
     index = next_entry(cache, index) ;
-    e = &cache->entries[index] ;
     int scans = 1 ;
 
-    while ( !empty_slot(e->state) ) {
+    while ( is_slot_used(cache, index) ) {
+        e = &cache->entries[index] ;
         if ( LIKELY(e->hash_value == hash) ) {
             if ( LIKELY(fast_key_equals( cache->items[e->item_index].key, key)) ) {
-                touch_entry(cache, e, scans);
+                bump_counter(&cache->stats.hits, scans) ;
+                touch_entry(cache, index);
                 return e ;
             }   
         }   
         index = next_entry(cache, index) ;
-        e = &cache->entries[index] ;
         scans++ ;
     }
     bump_counter(&cache->stats.misses, scans);
     return NULL; // Not found
 }
 
-static IhtEntry find_victim(IhtCache cache) {
-    IhtEntry victim = NULL ;
+static int find_victim(IhtCache cache) {
     SlotState victim_state = SLOT_MAX_AGE + 1 ;
     int scans = 0 ;
-    int index = cache->victim_index ;
+    int index = cache->evict_index ;
+    int victim_index = index ;
 
     for (int search = MAX_EVICTION_SEARCH ; search > 0 ; scans++, index = next_entry(cache, index) ) {
-        IhtEntry e = entry_addr(cache, index) ;
-        int slot_state = e->state ;
+        int slot_state = cache->states[index];
         if ( empty_slot(slot_state) ) continue ;
         if ( slot_state == SLOT_MIN_AGE ) {
-            victim = e ;
-            break ;
+            victim_index = index ;
+            search = 0 ;
+            continue ;
         }
         search-- ;
         if ( slot_state < victim_state ) {
-            victim = e ;
+            victim_index = index ;
             victim_state = slot_state ;
         } ;
-        e->state = slot_state = (slot_state-1) ;
+        cache->states[index] = slot_state - 1 ;
         // Limit scan to slow evictions
         search-- ;
     }
-    cache->victim_index = index ;
+    cache->evict_index = index ;
     bump_counter(&cache->stats.evictions, scans);
 
-    return victim ;
+    return victim_index ;
 }
 
 static IhtEntry alloc_new_entry(IhtCache cache, const void *key)
 {
-    IhtEntry victim = NULL ;
-    struct iht_entry victim_entry ;
+//    IhtEntry victim = NULL ;
+    int victim_index = -1 ;
+    SlotState victim_state = SLOT_EMPTY ;
+    //struct iht_entry victim_entry ;
     int new_entry_index = cache->item_count ;
 
-    if ( new_entry_index >= cache->max_items ) {
-        victim = find_victim(cache) ;
+    if ( LIKELY(new_entry_index >= cache->max_items )) {
+//        victim = find_victim(cache) ;
         // victim is saved for the unlikley case that the key is already in the cache
         // in this case, the victim will be resurretced .
-        victim_entry = *victim ;
-        *victim = (struct iht_entry) {} ;
+        victim_index = find_victim(cache) ;
+        victim_state = cache->states[victim_index] ;
+        cache->states[victim_index] = SLOT_EMPTY ;
+        //        victim_entry = *victim ;
+//        *victim = (struct iht_entry) {} ;
         cache->item_count--;
-        new_entry_index = victim_entry.item_index ;
+        new_entry_index = cache->entries[victim_index].item_index ;
     }
 
-    unsigned hash_value = key_hash(cache, key); // TODO: Implement a proper hash function
+    unsigned hash_value = key_hash(cache, key); 
     unsigned index = hash_value & cache->entries_mask;
     IhtEntry e = entry_addr(cache, index) ;
     int scans = 0 ;
-    while ( e->state > SLOT_REMOVED ) {
+    while ( is_slot_used(cache, index) ) {
         // Very unlikely, key may already be in the table, in this case, we need to undo
         // the removal - restore the victim, and assume the existing location is where
         // the item will be inserted.
         if ( UNLIKELY(e->hash_value == hash_value && key_equals(cache, item_key(cache, e->item_index), key))) {
-            // Should we update existing entry?
-            // In general, not expecting to be here
-            if ( victim ) {
-                *victim = victim_entry ;
+            if ( victim_index >= 0 ) {
+                cache->states[victim_index] = victim_state ;
+//                *victim = victim_entry ;
                 cache->item_count++ ;
             }
 
@@ -388,7 +414,8 @@ static IhtEntry alloc_new_entry(IhtCache cache, const void *key)
     };
 
     // e is populated with the new entry data
-    *e = (struct iht_entry) { .hash_value = hash_value, .item_index = new_entry_index, .state = SLOT_MIN_AGE} ;
+    *e = (struct iht_entry) { .hash_value = hash_value, .item_index = new_entry_index} ;
+    cache->states[index] = SLOT_MIN_AGE ;
 
     bump_counter(&cache->stats.adds, scans) ;
     cache->item_count++;
