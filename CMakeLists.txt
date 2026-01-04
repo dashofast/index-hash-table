@@ -4,7 +4,7 @@ project(index-hash-table VERSION 0.1.0 LANGUAGES C)
 add_library(index-hash-table src/index-hash-table.c)
 
 target_compile_features(index-hash-table PRIVATE c_std_23)
-target_compile_options(index-hash-table PRIVATE -march=native)
+target_compile_options(index-hash-table PRIVATE -march=native -Wall -Wextra  -Werror)
 
 target_include_directories(index-hash-table
     PUBLIC

@@ -50,9 +50,9 @@ struct iht_stats {
 
 struct iht_cache {
     // Configuration
-    int min_capacity ;
-    int key_size ;
-    int value_size ;
+    unsigned int min_capacity ;
+    unsigned int key_size ;
+    unsigned int value_size ;
     float max_load_factor ;
     ihtCacheFiller filler ;
     void *cxt ;
@@ -347,14 +347,13 @@ static int find_victim(IhtCache cache) {
     int victim_index = index ;
 
     for (int search = MAX_EVICTION_SEARCH ; search > 0 ; scans++, index = next_entry(cache, index) ) {
-        int slot_state = cache->states[index];
+        SlotState slot_state = cache->states[index];
         if ( empty_slot(slot_state) ) continue ;
         if ( slot_state == SLOT_MIN_AGE ) {
             victim_index = index ;
             search = 0 ;
             continue ;
         }
-        search-- ;
         if ( slot_state < victim_state ) {
             victim_index = index ;
             victim_state = slot_state ;
@@ -415,7 +414,7 @@ static IhtEntry alloc_new_entry(IhtCache cache, const void *key)
 
     // e is populated with the new entry data
     *e = (struct iht_entry) { .hash_value = hash_value, .item_index = new_entry_index} ;
-    cache->states[index] = SLOT_MIN_AGE ;
+    cache->states[index] = INITIAL_STATE ;
 
     bump_counter(&cache->stats.adds, scans) ;
     cache->item_count++;
@@ -545,7 +544,7 @@ void ihtCacheReconfigure(IhtCache cache)
 
 void ihtCacheClearStats(IhtCache cache)
 {
-    cache->stats = (struct iht_stats){} ;
+    cache->stats = (struct iht_stats) {} ;
 }
 
 // Basic get, put, and lookup functions
@@ -566,6 +565,7 @@ bool ihtCachePut(IhtCache cache, const void *key, const void *value)
     IhtEntry e = alloc_new_entry(cache, key) ;
     if ( !e ) return false ;
     store_item(cache, e->item_index, key, value) ;
+    return true ;
 }   
 
 bool ihtCacheLookup(IhtCache cache, const void *key, void *value_out)
@@ -596,21 +596,30 @@ IhtCacheFastValue ihtCacheGet_Fast(IhtCache cache, IhtCacheFastKey key)
     return cache->items[e->item_index].value ;
 }
 
-static void print_counter(FILE *fp, const char *label, IhtCounter counter)
+static void print_counter(FILE *fp, const char *label, IhtCounter counter, int indent)
 {
     double ratio = counter.count>0 ? (double) counter.scans/counter.count : -1 ;
-    fprintf(fp, "   %s: %d (scans=%d, ratio=%.2f)\n", label, counter.count, counter.scans, ratio) ;
+    fprintf(fp, "%*s%s: %d (scans=%d, ratio=%.2f)\n", indent*2, "", label, counter.count, counter.scans, ratio) ;
 }
 
 void ihtCachePrintStats(FILE *fp, IhtCache cache, const char *label)
 {
-    struct iht_stats *stats = &cache->stats ;
-    fprintf(fp, "Cache Stats(%s): lookups: %d hit=%.2f miss=%.2f\n", label, stats->lookups,
-        100.0*stats->hits.count/(stats->lookups+0.001),
-        100.0*stats->misses.count/(stats->lookups+0.001));
-    print_counter(fp, "hits", stats->hits) ;
-    print_counter(fp, "misses", stats->misses) ;
-    print_counter(fp, "adds", stats->adds) ;
-    print_counter(fp, "updates", stats->updates) ;
-    print_counter(fp, "evictions", stats->evictions);
+    return ihtCachePrintStats1(fp, cache, label, true, 2) ;
+}
+
+
+void ihtCachePrintStats1(FILE *fp, IhtCache cache, const char *label, int indent, int show_stats)
+{
+    struct iht_stats *stats = &cache->stats;
+    fprintf(fp, "%*s%s: Cache Stats: lookups: %d hit=%.2f miss=%.2f\n", indent, "", label,
+        stats->lookups,
+        (100.0 * stats->hits.count) / (stats->lookups + !stats->lookups),
+        (100.0 * stats->misses.count) / (stats->lookups + !stats->lookups));
+    if  (show_stats>=2) {
+        print_counter(fp, "hits", stats->hits, indent);
+        print_counter(fp, "misses", stats->misses, indent);
+        print_counter(fp, "adds", stats->adds, indent);
+        print_counter(fp, "updates", stats->updates, indent);
+        print_counter(fp, "evictions", stats->evictions, indent);
+    }
 }
