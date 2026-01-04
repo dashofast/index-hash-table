@@ -1,9 +1,32 @@
+/**
+ * @file
+ * @brief Test iht cache fast key/value API (1K, double key, double value)
+ * 
+ * @details
+ * This test suite benchmarks the index-hash-table (IHT) cache using fast key/value. It runs the following tests:
+ * - NOP operation: Simple doubling of the input value.
+ * - Exponential operation: Computes the exponential of the input value.
+ * - Reference Caches.
+ *   - Benchmark of repeated EXP calls
+ *   - Bnechmark of repeated NOP calls
+ *   - Standard cache test with NOP oepration
+ * - Cache tests: Measures performance of the IHT cache with exponential operations:
+ *   - Standard cache test
+ *   - cache with high load factor
+ *   - Cache with insufficient size
+ *   - Cache with shifting keys
+ *   - Cache with noise in keys
+ *  
+ */
+
 #include <stdio.h>
 #include <math.h>
 
 #include <time.h>
 
 #include "index-hash-table.h"
+
+static int error_count ;
 
 struct t_key {
     double a, b, c, d ;
@@ -13,21 +36,20 @@ struct t_value {
     double x, y, z, u ;
 } ;
 
-static inline double time_hires(void)
+static inline double vv(int pos, int count)
 {
-    struct timespec ts ;
-    clock_gettime(CLOCK_MONOTONIC, &ts) ;
-    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
-    return now ;
+    return 0.5 + (9.5*(pos%count))/count ;
+}
+
+static inline double v_noise(int pos, int count)
+{
+    return (0.02*pos)/count-0.01 ;
 }
 
 
-#define R 10000
-#define N 1000
-
 static void set_key(int pos, int count, struct t_key *key)
 {
-    double v = 0.5 + (9.5*(pos%count))/count ;
+    double v = vv(pos, count) ;
     key->a = v ;
     key->b = v + 1.0 ;
     key->c = v + 2.0 ;
@@ -51,9 +73,52 @@ static void nop_value(const struct t_key *key, struct t_value *value)
     value->u = key->d ;
 }
 
-void test_nop(void)
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
+#include <getopt.h>
+#include <time.h>
+
+#include "index-hash-table.h"
+
+static inline double time_hires(void)
 {
-    double start_t = time_hires() ;
+    struct timespec ts ;
+    clock_gettime(CLOCK_MONOTONIC, &ts) ;
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+    return now ;
+}
+
+static double time_mono(void)
+{
+    static double base_time ;
+    double now = time_hires() ;
+    if ( base_time == 0 ) base_time =now ;
+    return now - base_time ;
+}
+
+static void check_test(const char *test_name, double dt, double expected, double result)
+{
+    double error = 2*(result - expected)/(expected + result) ;
+    printf( "%s (%.3f seconds): Error=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+    if ( fabs(error) > 0.05 ) {
+        fprintf(stderr, "FAILED: %s (%.3f seconds): Diff=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+        error_count ++ ;
+    }
+}
+
+static void show_test_details(IhtCache c, const char *test_name, int show_stats)
+{
+    if ( !show_stats) return ;
+    ihtCachePrintStats1(stdout, c, test_name, 2, show_stats) ;
+}
+
+
+static double test_nop(int N, int R)
+{
+    double start_t = time_mono() ;
     double s = 0 ;
     struct t_key key ;
     struct t_value value ;
@@ -64,17 +129,18 @@ void test_nop(void)
             s += value.y ;
         }
     }
-    double end_t = time_hires() ;
-    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N);
+    double end_t = time_mono() ;
+    double result = s/R/N ;
+    printf("%s (%.3f seconds): V=%.3f\n", __func__, end_t - start_t, result) ;
+    return result ;
 }
 
-void test_exp(void)
+static double test_exp(int N, int R)
 {
-    double start_t = time_hires() ;
+    double start_t = time_mono() ;
     double s = 0 ;
     struct t_key key ;
     struct t_value value ;
-
     for (int r = 0 ; r<R ; r++ ) {
         for (int i=0 ; i<N ; i++ ) {
             set_key(i+r%100, 100+N, &key) ;
@@ -82,8 +148,10 @@ void test_exp(void)
             s += value.y ;
         }
     }
-    double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
+    double end_t = time_mono() ;
+    double result = s/R/N ;
+    printf("%s (%.3f seconds): V=%.3f\n", __func__, end_t - start_t, result) ;
+    return result ;
 }
 
 static bool nop_wrapper(void *cxt, const void *param, void *result)
@@ -95,24 +163,6 @@ static bool nop_wrapper(void *cxt, const void *param, void *result)
     return true ;
 }
 
-void test_cache_nop(void)
-{
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), nop_wrapper, NULL);
-    double s = 0 ;
-    struct t_key key ;
-    for (int r = 0 ; r<R ; r++ ) {
-        for (int i=0 ; i<N ; i++ ) {
-            set_key(i+r%100, 100+N, &key) ;
-            struct t_value *value = ihtCacheGet(c, &key) ;
-            s += value->y ;
-        }
-    }
-    double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
-    ihtCacheDestroy(c) ;
-}
 
 static bool exp_wrapper(void *cxt, const void *param, void *result)
 {
@@ -123,10 +173,10 @@ static bool exp_wrapper(void *cxt, const void *param, void *result)
     return true ;
 }
 
-void test_cache_exp(void)
+void test_cache_nop(int N, int R, double s0, int show_stats)
 {
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), nop_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
     for (int r = 0 ; r<R ; r++ ) {
@@ -137,16 +187,16 @@ void test_cache_exp(void)
             s += value->y ;
         }
     }
-    double end_t = time_hires() ;
-    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
+    double end_t = time_mono() ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
     ihtCacheDestroy(c) ;
 }
 
-void test_cache_half(void)
+void test_cache_exp(int N, int R, double s0, int show_stats )
 {
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N/2, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
     for (int r = 0 ; r<R ; r++ ) {
@@ -157,20 +207,42 @@ void test_cache_half(void)
             s += value->y ;
         }
     }
-    double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
+    double end_t = time_mono() ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
     ihtCacheDestroy(c) ;
 }
 
-void test_cache_pack(void)
+// Test with smaller cache (N/2)
+void test_cache_too_small(int N, int R, double s0, int show_stats)
 {
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
-    ihtCacheSetMaxLoadFactor(c, 0.75) ;
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N/2, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
+    double s = 0 ;
+    struct t_key key ;
+    for (int r = 0 ; r<R ; r++ ) {
+        int b = r%100 ;
+        for (int i=0 ; i<N ; i++ ) {
+            set_key(i+b, 100+N, &key) ;
+            struct t_value *value = ihtCacheGet(c, &key) ;
+            s += value->y ;
+        }
+    }
+    double end_t = time_mono() ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
+    ihtCacheDestroy(c) ;
+}
+
+// Test with higher load factor (0.75)
+void test_cache_high_load(int N, int R, double s0, int show_stats)
+{
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
+    ihtCacheSetMaxLoadFactor(c, 0.9) ;
     ihtCacheReconfigure(c);
-    double s = 0 ;
     struct t_key key ;
+    double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
@@ -179,83 +251,113 @@ void test_cache_pack(void)
             s += value->y ;
         }
     }
-    double end_t = time_hires() ;
-    printf("%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
+    double end_t = time_mono() ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
     ihtCacheDestroy(c) ;
 }
 
-void test_cache_shift(void)
+void test_cache_shift(int N, int R, double s0, int show_stats)
 {
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = (r/100)*100 ;
+        int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, R+N, &key) ;
+            set_key(i+b, 100+N, &key) ;
+            key.a += v_noise(r, R);
+            struct t_value *value = ihtCacheGet(c, &key) ;
+            s += value->y ;
+        }
+    }
+    double end_t = time_mono() ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
+    ihtCacheDestroy(c) ;
+}
+
+void test_cache_noise(int N, int R, double s0, int show_stats)
+{
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
+    double s = 0 ;
+    struct t_key key ;
+    for (int r = 0 ; r<R ; r++ ) {
+        int b = r%100 ;
+        for (int i=0 ; i<N ; i++ ) {
+            set_key(i+b, 100+N, &key) ;
+            if ( i%10 == 0) key.a += v_noise(r, R);
+
+            struct t_value *value = ihtCacheGet(c, &key) ;
+            s += value->y ;
+        }
+    }
+    double end_t = time_mono() ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
+    ihtCacheDestroy(c) ;
+}
+
+void test_cache_fuzzy(int N, int R, double s0, int show_stats)
+{
+    double start_t = time_mono() ;
+    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
+    double s = 0 ;
+    struct t_key key ;
+    for (int r = 0 ; r<R ; r++ ) {
+        int b = r%100 ;
+        for (int i=0 ; i<N ; i++ ) {
+            set_key(i+b, 100+N, &key) ;
+            if ( i%3 == 0) key.a += v_noise(r, R);
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
         }
     }
     double end_t = time_hires() ;
-    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
+    check_test(__func__, end_t - start_t, s0, s/R/N) ;
+    show_test_details(c, __func__, show_stats) ;
     ihtCacheDestroy(c) ;
 }
 
-void test_cache_noise(void)
-{
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
-    double s = 0 ;
-    struct t_key key ;
-    for (int r = 0 ; r<R ; r++ ) {
-        int b = (r/100)*100 ;
-        for (int i=0 ; i<N ; i++ ) {
-            i ? set_key(i+b, R+N, &key) : set_key(r, R+1, &key) ;
-            struct t_value *value = ihtCacheGet(c, &key) ;
-            s += value->y ;
+// Invoke with '-nN' and '-rR' to set N and R valuee
+// Default
+
+int main(int argc, char **argv) {
+    int N = 1000 ;
+    int R = 1000 ;
+    int show_stats = 1 ;
+    int opt ;
+    while ( (opt=getopt(argc, argv, "Dsn:r:")) != -1 ) {
+        switch ( opt ) {
+            case 'n':
+                N = atoi(optarg) ;
+                break ;
+            case 'r':
+                R = atoi(optarg) ;
+                break ;
+            case 'q':
+                show_stats = 0 ;
+                break ;
+            case 's':
+                show_stats = 2 ;
+                break ;
+            default:
+                fprintf(stderr, "Unknown option: %c\n", optopt) ;
+                exit(2) ;
         }
     }
-    double end_t = time_hires() ;
-    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
-    ihtCacheDestroy(c) ;
+    
+    fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
+    double nop_result = test_nop(N, R) ;
+    double exp_result = test_exp(N, R) ;
+    test_cache_nop(N, R, nop_result, show_stats) ;
+    test_cache_exp(N, R, exp_result, show_stats) ;
+    test_cache_too_small(N, R, exp_result, show_stats) ;
+    test_cache_high_load(N, R, exp_result, show_stats) ;
+    test_cache_shift(N, R, exp_result, show_stats) ;
+    test_cache_noise(N, R, exp_result, show_stats) ;
+    test_cache_fuzzy(N, R, exp_result, show_stats);
+    return error_count ? EXIT_FAILURE : EXIT_SUCCESS ;
 }
-
-void test_cache_fuzzy(void)
-{
-    double start_t = time_hires() ;
-    IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
-    double s = 0 ;
-    struct t_key key ;
-    for (int r = 0 ; r<R ; r++ ) {
-        int b = (r/100)*100 ;
-        for (int i=0 ; i<N ; i++ ) {
-            i%2 ? set_key(i+b, R+N, &key) : set_key(i+r, N+R+1, &key) ;
-            struct t_value *value = ihtCacheGet(c, &key) ;
-            s += value->y ;
-        }
-    }
-    double end_t = time_hires() ;
-    fprintf(stderr, "%s(R=%d,N=%d): (t=%.3f) = %f\n", __func__, R, N, end_t - start_t, s/R/N) ;
-    ihtCachePrintStats(stdout, c, __func__) ;
-    ihtCacheDestroy(c) ;
-}
-
-int main() {
-
-    test_nop() ;
-    test_exp() ;
-    test_cache_nop() ;
-    test_cache_exp() ;
-    test_cache_shift() ;
-    test_cache_pack() ;
-    test_cache_half() ;
-    test_cache_noise() ;
-    test_cache_fuzzy() ;
-    return 0;
-}
-
