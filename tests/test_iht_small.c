@@ -9,9 +9,7 @@
  * 
  */
 #include <math.h>
-
 #include <time.h>
-
 #include "index-hash-table.h"
 
 static inline double time_hires(void)
@@ -20,14 +18,6 @@ static inline double time_hires(void)
     clock_gettime(CLOCK_MONOTONIC, &ts) ;
     double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
     return now ;
-}
-
-static double time_mono(void)
-{
-    static double base_time ;
-    double now = time_hires() ;
-    if ( base_time == 0 ) base_time =now ;
-    return now - base_time ;
 }
 
 #define R 10000
@@ -70,6 +60,7 @@ void test_exp(void)
 
 static bool nop_wrapper(void *cxt, const void *param, void *result)
 {
+    (void) cxt ;
     double x = *(double*) param ;
     double v = x+x ;
     *(double *) result = v ;
@@ -96,6 +87,7 @@ void test_cache_nop(void)
 
 static bool exp_wrapper(void *cxt, const void *param, void *result)
 {
+    (void) cxt ;
     double x = *(double*) param ;
     double v = exp(x) ;
     *(double *) result = v ;
@@ -166,7 +158,6 @@ void test_cache_shift(void)
     double start_t = time_hires() ;
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
-    double inv_n = 1.0/N ;
     for (int r = 0 ; r<R ; r++ ) {
         int b = (r/100)*100 ;
         for (int i=0 ; i<N ; i++ ) {

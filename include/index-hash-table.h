@@ -300,8 +300,10 @@ void ihtCacheClearStats(IhtCache cache) ;
  * @param fp File pointer to write statistics to.
  * @param cache The cache instance.
  * @param label A label string to prefix the statistics output with.
+ * @param detail_level The level of detail to include in the output (0 = minimal, 1 = standard, 2 = full).
  */
 void ihtCachePrintStats(FILE *fp, IhtCache cache, const char *label) ;
+void ihtCachePrintStats1(FILE *fp, IhtCache cache, const char *label, int indent, int show_stats) ;
 
 #ifdef __cplusplus
 }

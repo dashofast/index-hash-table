@@ -21,13 +21,6 @@ static inline double time_hires(void)
     return now ;
 }
 
-static double time_mono(void)
-{
-    static double base_time ;
-    double now = time_hires() ;
-    if ( base_time == 0 ) base_time =now ;
-    return now - base_time ;
-}
 
 #define R 10000
 #define N 1000
@@ -95,6 +88,7 @@ void test_exp(void)
 
 static bool nop_wrapper(void *cxt, const void *param, void *result)
 {
+    (void) cxt ;
     struct t_key *key = (struct t_key *) param ;
     struct t_value *value = (struct t_value *) result ;
     nop_value(key, value) ;
@@ -122,6 +116,7 @@ void test_cache_nop(void)
 
 static bool exp_wrapper(void *cxt, const void *param, void *result)
 {
+    (void) cxt ;
     struct t_key *key = (struct t_key *) param ;
     struct t_value *value = (struct t_value *) result ;
     calc_value(key, value) ;
@@ -157,7 +152,6 @@ void test_cache_half(void)
     for (int r = 0 ; r<R ; r++ ) {
         int b = r%100 ;
         for (int i=0 ; i<N ; i++ ) {
-            struct t_key key ;
             set_key(i+b, 100+N, &key) ;
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
@@ -196,7 +190,6 @@ void test_cache_shift(void)
     double start_t = time_hires() ;
     IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value ), exp_wrapper, NULL);
     double s = 0 ;
-    double inv_n = 1.0/N ;
     struct t_key key ;
     for (int r = 0 ; r<R ; r++ ) {
         int b = (r/100)*100 ;
