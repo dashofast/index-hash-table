@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <getopt.h>
 #include <time.h>
+#include <string.h>
 
 #include "index-hash-table.h"
 
@@ -268,12 +269,19 @@ void test_cache_fuzzy(int N, int R, double s0, int show_stats)
 // Invoke with '-nN' and '-rR' to set N and R valuee
 // Default
 
+static bool run_test(int test_id, const char *test_select)
+{
+    return !test_select || strchr(test_select, test_id) ;
+}
+
+
 int main(int argc, char **argv) {
     int N = 1000 ;
     int R = 1000 ;
+    char *test_select = NULL ;
     int show_stats = 1 ;
     int opt ;
-    while ( (opt=getopt(argc, argv, "Dsn:r:")) != -1 ) {
+    while ( (opt=getopt(argc, argv, "qsn:r:t:")) != -1 ) {
         switch ( opt ) {
             case 'n':
                 N = atoi(optarg) ;
@@ -287,6 +295,9 @@ int main(int argc, char **argv) {
             case 's':
                 show_stats = 2 ;
                 break ;
+            case 't':
+                test_select = strdup(optarg) ;
+                break ;
             default:
                 fprintf(stderr, "Unknown option: %c\n", optopt) ;
                 exit(2) ;
@@ -296,13 +307,13 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
     double nop_result = test_nop(N, R) ;
     double exp_result = test_exp(N, R) ;
-    test_cache_nop(N, R, nop_result, show_stats) ;
-    test_cache_exp(N, R, exp_result, show_stats) ;
-    test_cache_too_small(N, R, exp_result, show_stats) ;
-    test_cache_high_load(N, R, exp_result, show_stats) ;
-    test_cache_shift(N, R, exp_result, show_stats) ;
-    test_cache_noise(N, R, exp_result, show_stats) ;
-    test_cache_fuzzy(N, R, exp_result, show_stats);
+    if ( run_test('A', test_select) ) test_cache_nop(N, R, nop_result, show_stats) ;
+    if ( run_test('B', test_select) ) test_cache_exp(N, R, exp_result, show_stats) ;
+    if ( run_test('C', test_select) ) test_cache_too_small(N, R, exp_result, show_stats) ;
+    if ( run_test('D', test_select) ) test_cache_high_load(N, R, exp_result, show_stats) ;
+    if ( run_test('E', test_select) ) test_cache_shift(N, R, exp_result, show_stats) ;
+    if ( run_test('F', test_select) ) test_cache_noise(N, R, exp_result, show_stats) ;
+    if ( run_test('G', test_select) ) test_cache_fuzzy(N, R, exp_result, show_stats);
+    free(test_select) ;
     return error_count ? EXIT_FAILURE : EXIT_SUCCESS ;
 }
-

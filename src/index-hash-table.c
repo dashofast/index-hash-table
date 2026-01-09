@@ -349,14 +349,13 @@ static int find_victim(IhtCache cache) {
     for (int search = MAX_EVICTION_SEARCH ; search > 0 ; scans++, index = next_entry(cache, index) ) {
         SlotState slot_state = cache->states[index];
         if ( empty_slot(slot_state) ) continue ;
-        if ( slot_state == SLOT_MIN_AGE ) {
-            victim_index = index ;
-            search = 0 ;
-            continue ;
-        }
         if ( slot_state < victim_state ) {
             victim_index = index ;
             victim_state = slot_state ;
+            if ( victim_state == SLOT_MIN_AGE ) {
+                search = 0 ;
+                continue ;
+            }
         } ;
         cache->states[index] = slot_state - 1 ;
         // Limit scan to slow evictions
