@@ -1,4 +1,7 @@
 name: ci
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   push:
@@ -23,3 +26,6 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: clang-tidy
+        run: find src -name '*.c' -print0 | xargs -0 clang-tidy -p build || true
