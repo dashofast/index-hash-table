@@ -2,6 +2,8 @@ Checks: >
   *,
   -clang-analyzer-security.insecureAPI.bzero,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -readability-braces-around-statements,
+  -bugprone-easily-swappable-parameters,
   -llvmlibc-*,
   -llvm-include-order,
   -altera-*,
@@ -12,6 +14,9 @@ CheckOptions:
     value: 1
   - key: readability-identifier-length.MinimumParameterNameLength
     value: 1
+  - key: readability-identifier-length.MinimumLoopCounterNameLength
+    value: 1
+
 
 
 WarningsAsErrors: ''

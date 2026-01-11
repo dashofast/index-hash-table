@@ -77,15 +77,6 @@ static void nop_value(const struct t_key *key, struct t_value *value)
 }
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-#include <getopt.h>
-#include <time.h>
-
-#include "index-hash-table.h"
-
 static inline double time_hires(void)
 {
     struct timespec ts ;
@@ -107,7 +98,7 @@ static void check_test(const char *test_name, double dt, double expected, double
     double error = 2*(result - expected)/(expected + result) ;
     printf( "%s (%.3f seconds): Error=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
     if ( fabs(error) > 0.05 ) {
-        fprintf(stderr, "FAILED: %s (%.3f seconds): Diff=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+        (void) fprintf(stderr, "FAILED: %s (%.3f seconds): Diff=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
         error_count ++ ;
     }
 }
@@ -122,12 +113,13 @@ static void show_test_details(IhtCache c, const char *test_name, int show_stats)
 static double test_nop(int N, int R)
 {
     double start_t = time_mono() ;
-    double s = 0 ;
     struct t_key key ;
     struct t_value value ;
+    const int BLOCK = 100 ;
+    double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+r%100, 100+N, &key) ;
+            set_key(i+r%BLOCK, BLOCK+N, &key) ;
             nop_value(&key, &value) ;
             s += value.y ;
         }
@@ -144,9 +136,10 @@ static double test_exp(int N, int R)
     double s = 0 ;
     struct t_key key ;
     struct t_value value ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+r%100, 100+N, &key) ;
+            set_key(i+r%BLOCK, BLOCK+N, &key) ;
             calc_value(&key, &value) ;
             s += value.y ;
         }
@@ -182,10 +175,11 @@ void test_cache_nop(int N, int R, double s0, int show_stats)
     IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), nop_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
         }
@@ -201,11 +195,13 @@ void test_cache_exp(int N, int R, double s0, int show_stats )
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
+    const int BLOCK = 100 ;
+
     struct t_key key ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
         }
@@ -223,10 +219,12 @@ void test_cache_too_small(int N, int R, double s0, int show_stats)
     IhtCache c = ihtCacheCreate(N/2, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
+
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
         }
@@ -246,10 +244,12 @@ void test_cache_high_load(int N, int R, double s0, int show_stats)
     ihtCacheReconfigure(c);
     struct t_key key ;
     double s = 0 ;
+    const int BLOCK = 100 ;
+
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
         }
@@ -266,10 +266,11 @@ void test_cache_shift(int N, int R, double s0, int show_stats)
     IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             key.a += v_noise(r, R);
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
@@ -287,10 +288,11 @@ void test_cache_noise(int N, int R, double s0, int show_stats)
     IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             if ( i%10 == 0) key.a += v_noise(r, R);
 
             struct t_value *value = ihtCacheGet(c, &key) ;
@@ -309,10 +311,12 @@ void test_cache_fuzzy(int N, int R, double s0, int show_stats)
     IhtCache c = ihtCacheCreate(N, sizeof(struct t_key), sizeof(struct t_value), exp_wrapper, NULL);
     double s = 0 ;
     struct t_key key ;
+    const int BLOCK = 100 ;
+
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            set_key(i+b, 100+N, &key) ;
+            set_key(i+b, BLOCK+N, &key) ;
             if ( i%3 == 0) key.a += v_noise(r, R);
             struct t_value *value = ihtCacheGet(c, &key) ;
             s += value->y ;
@@ -354,15 +358,16 @@ int main(int argc, char **argv) {
                 show_stats = 2 ;
                 break ;
             case 't':
+                free(test_select) ;
                 test_select = strdup(optarg) ;
                 break ;
             default:
-                fprintf(stderr, "Unknown option: %c\n", optopt) ;
+                (void) fprintf(stderr, "Unknown option: %c\n", optopt) ;
                 exit(2) ;
         }
     }
     
-    fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
+    (void) fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
     double nop_result = test_nop(N, R) ;
     double exp_result = test_exp(N, R) ;
     if ( run_test('A', test_select) ) test_cache_nop(N, R, nop_result, show_stats) ;

@@ -133,6 +133,12 @@ static inline int next_entry(IhtCache cache, int index) {
     return (index + 1) & cache->entries_mask ;
 }
 
+static inline int hash_entry(IhtCache cache, unsigned int hash_value)
+{
+    return (int) (hash_value & cache->entries_mask);
+
+}
+
 // NOLINT((llvm-include-order)
 #include <nmmintrin.h>
 
@@ -285,7 +291,7 @@ static void remove_all(IhtCache cache) {
 static IhtEntry lookup_entry(IhtCache cache, const void *key) {
     // Logic to look up an entry by key
     unsigned hash = key_hash(cache, key);
-    int index = hash & cache->entries_mask;
+    int index = hash_entry(cache, hash) ;
     IhtEntry e = entry_addr(cache, index) ;
     cache->stats.lookups++ ;
     int scans = 0 ;
@@ -308,7 +314,7 @@ static IhtEntry lookup_entry(IhtCache cache, const void *key) {
 static IhtEntry fast_lookup_entry(IhtCache cache, IhtCacheFastKey key) {
     // Logic to look up an entry by key
     unsigned hash = fast_key_hash(key);
-    unsigned index = hash & cache->entries_mask;
+    int index = hash_entry(cache, hash) ;
     cache->stats.lookups++ ;
 
     // Unroll the first check, mostly likely to be a hit
@@ -395,7 +401,7 @@ static IhtEntry alloc_new_entry(IhtCache cache, const void *key)
     }
 
     unsigned hash_value = key_hash(cache, key); 
-    unsigned index = hash_value & cache->entries_mask;
+    int index = hash_entry(cache, hash_value) ;
     IhtEntry e = entry_addr(cache, index) ;
     int scans = 0 ;
     while ( is_slot_used(cache, index) ) {
@@ -490,7 +496,7 @@ void ihtCacheDestroy(IhtCache cache)
 
 bool ihtCacheHasFiller(IhtCache cache)
 {
-    return cache->filler != NULL ;
+    return (bool) (cache->filler != NULL) ;
 }
 
 int ihtCacheGetItemCount(IhtCache cache)
@@ -604,7 +610,7 @@ IhtCacheFastValue ihtCacheGet_Fast(IhtCache cache, IhtCacheFastKey key)
 static void print_counter(FILE *fp, const char *label, IhtCounter counter, int indent)
 {
     double ratio = counter.count>0 ? (double) counter.scans/counter.count : -1 ;
-    fprintf(fp, "%*s%s: %d (scans=%d, ratio=%.2f)\n", indent*2, "", label, counter.count, counter.scans, ratio) ;
+    (void) fprintf(fp, "%*s%s: %d (scans=%d, ratio=%.2f)\n", indent*2, "", label, counter.count, counter.scans, ratio) ;
 }
 
 void ihtCachePrintStats(FILE *fp, IhtCache cache, const char *label)
@@ -616,7 +622,7 @@ void ihtCachePrintStats(FILE *fp, IhtCache cache, const char *label)
 void ihtCachePrintStats1(FILE *fp, IhtCache cache, const char *label, int indent, int show_stats)
 {
     struct iht_stats *stats = &cache->stats;
-    fprintf(fp, "%*s%s: Cache Stats: lookups: %d hit=%.2f miss=%.2f\n", indent, "", label,
+    (void) fprintf(fp, "%*s%s: Cache Stats: lookups: %d hit=%.2f miss=%.2f\n", indent, "", label,
         stats->lookups,
         (100.0 * stats->hits.count) / (stats->lookups + !stats->lookups),
         (100.0 * stats->misses.count) / (stats->lookups + !stats->lookups));

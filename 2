@@ -1,0 +1,346 @@
+/home/user/github/index-hash-table/tests/test_iht_fast.c:30:10: error: 'index-hash-table.h' file not found [clang-diagnostic-error]
+#include "index-hash-table.h"
+         ^~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_fast.c:32:12: warning: variable 'error_count' is non-const and globally accessible, consider making it const [cppcoreguidelines-avoid-non-const-global-variables]
+static int error_count ;
+           ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:38:18: warning: narrowing conversion from '__time_t' (aka 'long') to 'double' [bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:38:33: warning: narrowing conversion from '__syscall_slong_t' (aka 'long') to 'double' [bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                                ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:38:44: warning: 1e9 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                                           ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:54:24: warning: 0.05 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    if ( fabs(error) > 0.05 ) {
+                       ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:60:40: warning: parameter 'c' is unused [misc-unused-parameters]
+static void show_test_details(IhtCache c, const char *test_name, int show_stats)
+                              ~~~~~~~~~^~~
+/home/user/github/index-hash-table/tests/test_iht_fast.c:68:12: warning: 0.5 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return 0.5 + (9.5*(pos%count))/count ;
+           ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:68:19: warning: 9.5 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return 0.5 + (9.5*(pos%count))/count ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:73:13: warning: 0.02 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return (0.02*pos)/count-0.01 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:73:29: warning: 0.01 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return (0.02*pos)/count-0.01 ;
+                            ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:144:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x) ;
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:164:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x) ;
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:185:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x) ;
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:208:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x) ;
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:227:52: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, BLOCK+N)+ v_noise(r/10, R/10) ;
+                                                   ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:227:58: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, BLOCK+N)+ v_noise(r/10, R/10) ;
+                                                         ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:228:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x);
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:247:47: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, BLOCK+N) + ((i%10) ? 0.0 : v_noise(r, R));
+                                              ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:248:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x) ;
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:269:20: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double y = ihtCacheGet_D_D(c, x) ;
+                   ^
+                     = NAN
+/home/user/github/index-hash-table/tests/test_iht_fast.c:289:13: warning: 1000 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    int N = 1000 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:290:13: warning: 1000 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    int R = 1000 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:293:9: warning: variable 'opt' is not initialized [cppcoreguidelines-init-variables]
+    int opt ;
+        ^
+            = 0
+/home/user/github/index-hash-table/tests/test_iht_fast.c:294:18: warning: function is not thread safe [concurrency-mt-unsafe]
+    while ( (opt=getopt(argc, argv, "qsn:r:t:")) != -1 ) {
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:297:21: warning: 'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead [cert-err34-c]
+                N = atoi(optarg) ;
+                    ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:300:21: warning: 'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead [cert-err34-c]
+                R = atoi(optarg) ;
+                    ^
+/home/user/github/index-hash-table/tests/test_iht_fast.c:314:17: warning: function is not thread safe [concurrency-mt-unsafe]
+                exit(2) ;
+                ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:30:10: error: 'index-hash-table.h' file not found [clang-diagnostic-error]
+#include "index-hash-table.h"
+         ^~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_large.c:32:12: warning: variable 'error_count' is non-const and globally accessible, consider making it const [cppcoreguidelines-avoid-non-const-global-variables]
+static int error_count ;
+           ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:44:12: warning: 0.5 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return 0.5 + (9.5*(pos%count))/count ;
+           ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:44:19: warning: 9.5 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return 0.5 + (9.5*(pos%count))/count ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:49:13: warning: 0.02 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return (0.02*pos)/count-0.01 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:49:29: warning: 0.01 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return (0.02*pos)/count-0.01 ;
+                            ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:58:18: warning: 2.0 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    key->c = v + 2.0 ;
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:59:18: warning: 3.0 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    key->d = v + 3.0 ;
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:84:18: warning: narrowing conversion from '__time_t' (aka 'long') to 'double' [bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:84:33: warning: narrowing conversion from '__syscall_slong_t' (aka 'long') to 'double' [bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                                ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:84:44: warning: 1e9 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                                           ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:100:24: warning: 0.05 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    if ( fabs(error) > 0.05 ) {
+                       ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:106:40: warning: parameter 'c' is unused [misc-unused-parameters]
+static void show_test_details(IhtCache c, const char *test_name, int show_stats)
+                              ~~~~~~~~~^~~
+/home/user/github/index-hash-table/tests/test_iht_large.c:183:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:205:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:228:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:253:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:275:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:296:20: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            if ( i%10 == 0) key.a += v_noise(r, R);
+                   ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:298:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:321:29: warning: variable 'value' is not initialized [cppcoreguidelines-init-variables]
+            struct t_value *value = ihtCacheGet(c, &key) ;
+                            ^
+                                  = NULL
+/home/user/github/index-hash-table/tests/test_iht_large.c:341:13: warning: 1000 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    int N = 1000 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:342:13: warning: 1000 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    int R = 1000 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:345:9: warning: variable 'opt' is not initialized [cppcoreguidelines-init-variables]
+    int opt ;
+        ^
+            = 0
+/home/user/github/index-hash-table/tests/test_iht_large.c:346:18: warning: function is not thread safe [concurrency-mt-unsafe]
+    while ( (opt=getopt(argc, argv, "qsn:r:t:")) != -1 ) {
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:349:21: warning: 'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead [cert-err34-c]
+                N = atoi(optarg) ;
+                    ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:352:21: warning: 'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead [cert-err34-c]
+                R = atoi(optarg) ;
+                    ^
+/home/user/github/index-hash-table/tests/test_iht_large.c:366:17: warning: function is not thread safe [concurrency-mt-unsafe]
+                exit(2) ;
+                ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:30:10: error: 'index-hash-table.h' file not found [clang-diagnostic-error]
+#include "index-hash-table.h"
+         ^~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_small.c:32:12: warning: variable 'error_count' is non-const and globally accessible, consider making it const [cppcoreguidelines-avoid-non-const-global-variables]
+static int error_count ;
+           ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:38:18: warning: narrowing conversion from '__time_t' (aka 'long') to 'double' [bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:38:33: warning: narrowing conversion from '__syscall_slong_t' (aka 'long') to 'double' [bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                                ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:38:44: warning: 1e9 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+                                           ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:53:5: warning: the value returned by this function should be used [cert-err33-c]
+    fprintf(stderr, "%s (%.3f seconds): Diff=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_small.c:53:5: note: cast the expression to void to silence this warning
+/home/user/github/index-hash-table/tests/test_iht_small.c:54:24: warning: 0.05 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    if ( fabs(error) > 0.05 ) {
+                       ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:55:9: warning: the value returned by this function should be used [cert-err33-c]
+        fprintf(stderr, "FAILED: %s (%.3f seconds): Error=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_small.c:55:9: note: cast the expression to void to silence this warning
+/home/user/github/index-hash-table/tests/test_iht_small.c:61:40: warning: parameter 'c' is unused [misc-unused-parameters]
+static void show_test_details(IhtCache c, const char *test_name, int show_stats)
+                              ~~~~~~~~~^~~
+/home/user/github/index-hash-table/tests/test_iht_small.c:69:12: warning: 0.5 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return 0.5 + (9.5*(pos%count))/count ;
+           ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:69:19: warning: 9.5 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return 0.5 + (9.5*(pos%count))/count ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:74:13: warning: 0.02 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return (0.02*pos)/count-0.01 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:74:29: warning: 0.01 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    return (0.02*pos)/count-0.01 ;
+                            ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:88:31: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+r%100, 100+N) ;
+                              ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:88:36: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+r%100, 100+N) ;
+                                   ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:105:31: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+r%100, 100+N) ;
+                              ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:105:36: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+r%100, 100+N) ;
+                                   ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:141:31: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+r%100, 100+N) ;
+                              ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:141:36: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+r%100, 100+N) ;
+                                   ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:142:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:158:19: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+        int b = r%100 ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:160:32: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N) ;
+                               ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:161:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:178:19: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+        int b = r%100 ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:180:32: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N) ;
+                               ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:181:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:200:19: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+        int b = r%100 ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:202:32: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N) ;
+                               ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:203:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:219:19: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+        int b = r%100 ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:221:32: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N)+ v_noise(r/10, R/10) ;
+                               ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:221:50: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N)+ v_noise(r/10, R/10) ;
+                                                 ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:221:56: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N)+ v_noise(r/10, R/10) ;
+                                                       ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:222:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:238:19: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+        int b = r%100 ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:240:32: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N) + ((i%10) ? 0.0 : v_noise(r, R));
+                               ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:240:45: warning: 10 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N) + ((i%10) ? 0.0 : v_noise(r, R));
+                                            ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:241:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:257:19: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+        int b = r%100 ;
+                  ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:259:32: warning: 100 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+            double x = vv(i+b, 100+N) + ((i%3) ? 0.0 : v_noise(r, R));
+                               ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:260:21: warning: variable 'y' is not initialized [cppcoreguidelines-init-variables]
+            double *y = ihtCacheGet(c, &x) ;
+                    ^
+                      = NULL
+/home/user/github/index-hash-table/tests/test_iht_small.c:279:13: warning: 1000 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    int N = 1000 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:280:13: warning: 1000 is a magic number; consider replacing it with a named constant [cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers]
+    int R = 1000 ;
+            ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:283:9: warning: variable 'opt' is not initialized [cppcoreguidelines-init-variables]
+    int opt ;
+        ^
+            = 0
+/home/user/github/index-hash-table/tests/test_iht_small.c:284:18: warning: function is not thread safe [concurrency-mt-unsafe]
+    while ( (opt=getopt(argc, argv, "qsn:r:t:")) != -1 ) {
+                 ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:287:21: warning: 'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead [cert-err34-c]
+                N = atoi(optarg) ;
+                    ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:290:21: warning: 'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead [cert-err34-c]
+                R = atoi(optarg) ;
+                    ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:302:17: warning: the value returned by this function should be used [cert-err33-c]
+                fprintf(stderr, "Unknown option: %c\n", optopt) ;
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_small.c:302:17: note: cast the expression to void to silence this warning
+/home/user/github/index-hash-table/tests/test_iht_small.c:303:17: warning: function is not thread safe [concurrency-mt-unsafe]
+                exit(2) ;
+                ^
+/home/user/github/index-hash-table/tests/test_iht_small.c:307:5: warning: the value returned by this function should be used [cert-err33-c]
+    fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/user/github/index-hash-table/tests/test_iht_small.c:307:5: note: cast the expression to void to silence this warning
