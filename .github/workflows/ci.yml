@@ -13,10 +13,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Build
         run: cmake --build build -j
+
+      - name: clang-tidy
+        run: find src -name '*.c' -print0 | xargs -0 clang-tidy -p build || true
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
