@@ -3,6 +3,7 @@ Checks: >
   -clang-analyzer-security.insecureAPI.bzero,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -llvmlibc-*,
+  -llvm-include-order,
   -altera-*,
   -hicpp-*
   
