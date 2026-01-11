@@ -17,7 +17,22 @@
     {
       "label": "clang-tidy",
       "type": "shell",
-      "command": "clang-tidy -header-filter=.* src/*.c",
+      "command": "clang-tidy",
+      "args": [ "-header-filter=.*", "--use-color=false", "src/*.c" ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [ "$gcc" ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "clang-tidy-tests",
+      "type": "shell",
+      "command": "clang-tidy",
+      "args": [ "-header-filter=.*",  "--use-color=false", "-fno-caret-diagnostics", "tests/*.c" ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -27,5 +42,6 @@
         "isDefault": false
       }
     }
+
   ]
 }
