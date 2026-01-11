@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
                 exit(2) ;
         }
     }
-    
+
     fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
     double nop_result = test_nop(N, R) ;
     double exp_result = test_exp(N, R) ;

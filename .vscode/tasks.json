@@ -21,10 +21,10 @@
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "problemMatcher": [],
+      "problemMatcher": [ "$gcc" ],
       "group": {
-        "kind": "test",
-        "isDefault": true
+        "kind": "build",
+        "isDefault": false
       }
     }
   ]
