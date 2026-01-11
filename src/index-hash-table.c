@@ -1,13 +1,21 @@
-#include <stdio.h>
+#include "index-hash-table.h"
+
 #include <stddef.h>
+#include <stdalign.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdalign.h>
-#include "index-hash-table.h"
+#include <math.h>
+
 
 #define MIN_CAPACITY 16
 #define DEFAULT_LOAD_FACTOR 0.40
 #define MAX_EVICTION_SEARCH 16
+
+#define KNUTH_GOLD_32 0x9e377989                 // Knuth 32-bit golden ratio
+#define KNUTH_GOLD_64 0x9e3779b97f4a7c15ULL      // Knuth 64-bit golden ratio
+
+#define int_sizeof(x) (int) sizeof(x)
 
 #if defined(__GNUC__) || defined(__clang__)
 #define LIKELY(x) (__builtin_expect(!!(x), 1))
@@ -17,10 +25,10 @@
 #define UNLIKLEY(x) (!!(x))
 #endif
 
-
 typedef enum SLOT_STATE { SLOT_EMPTY = 0, SLOT_REMOVED = 1, SLOT_MIN_AGE = 2, SLOT_MAX_AGE = 7 } SlotState ;
 
-static SlotState INITIAL_STATE = SLOT_MIN_AGE ; // set to SLOT_MIN_AGEA+n to make it more LRU.
+// set to SLOT_MIN_AGEA+n to make it more LRU.
+static SlotState INITIAL_STATE = SLOT_MIN_AGE ; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 static inline bool empty_slot(SlotState slot_state) {
     return slot_state <= SLOT_REMOVED ;
@@ -50,10 +58,10 @@ struct iht_stats {
 
 struct iht_cache {
     // Configuration
-    unsigned int min_capacity ;
-    unsigned int key_size ;
-    unsigned int value_size ;
-    float max_load_factor ;
+    int min_capacity ;
+    int key_size ;
+    int value_size ;
+    double max_load_factor ;
     ihtCacheFiller filler ;
     void *cxt ;
     ihtCacheCxtDestroyer cxt_destroyer ;
@@ -85,11 +93,12 @@ struct iht_cache {
     struct iht_stats stats ;
 } ;
 
-static bool use_crc ;
+static bool use_crc ; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
 
 // Accessors
 static inline void *item_addr(IhtCache cache, int item_index) {
-    return ((char*)cache->items) + cache->item_size*item_index ;
+    return ((char*)cache->items) + (cache->item_size*item_index) ;
 }
 
 static inline void *item_value(IhtCache cache, int item_index) {
@@ -124,19 +133,17 @@ static inline unsigned next_entry(IhtCache cache, unsigned index) {
     return (index + 1) & cache->entries_mask ;
 }
 
-
+// NOLINT((llvm-include-order)
 #include <nmmintrin.h>
 
 __attribute__((target("sse4.2")))
 static inline uint32_t fast_key_hash(IhtCacheFastKey key)
 {
-    static const int32_t SEED_32 = 0x9e377989 ;       // Knuth 32-bit golden ratio
-
     if ( LIKELY(use_crc) ) {
-        int crc = SEED_32 ;
+        uint32_t crc = KNUTH_GOLD_32 ;
 #ifdef __x86_64__
-        crc = _mm_crc32_u64(crc, key.v0) ;
-        crc = _mm_crc32_u64(crc, key.v1) ;
+        crc = (uint32_t) _mm_crc32_u64(crc, key.v0) ;
+        crc = (uint32_t) _mm_crc32_u64(crc, key.v1) ;
 #else
         crc = _mm_crc32_u32(crc, (int32_t) (key.v0>>32));
         crc = _mm_crc32_u32(crc, (int32_t) (key.));
@@ -146,12 +153,13 @@ static inline uint32_t fast_key_hash(IhtCacheFastKey key)
         return crc ;
 
     // Without support for SSE4.2 - no CRC instructions.
-    } else {
-        uint64_t h = key.v0 ^ (key.v1 + 0x9e3779b97f4a7c15ULL);
-        h *= 0x9e3779b97f4a7c15ULL;
-        h ^= h >> 32;
-        return (uint32_t)h;
-    }
+    } 
+    uint64_t h = key.v0 ^ (key.v1 + KNUTH_GOLD_64);
+    h *= KNUTH_GOLD_64;
+    // Reduce to 32 bit, mix high/low 16 bits.
+    h ^= h >> UINT32_WIDTH ;   
+    h ^= h >> UINT16_WIDTH ;
+    return (uint32_t)h;
 }
 
 static inline uint32_t key_hash(IhtCache cache, const void *key)
@@ -159,31 +167,29 @@ static inline uint32_t key_hash(IhtCache cache, const void *key)
     if ( cache->short_key ) {
         memcpy( &cache->work_key, key, cache->key_size) ;
         return fast_key_hash ( cache->work_key) ;
-    } else if ( cache->fast_key ) {
+    } ;
+    if ( cache->fast_key ) {
         return fast_key_hash( *(IhtCacheFastKey *) key) ;
     }
 
-    // Use simple hashing with via rotation
-    static uint64_t SEED_64 = 0x9e3779b97f4a7c15ULL ;
-
     int bytes = cache->key_size ;
-    uint64_t h = SEED_64 + bytes ;
+    uint64_t h = KNUTH_GOLD_64 + bytes ;
     int pos = 0 ;
     for (pos = 0 ; pos<bytes ; pos+= sizeof(h) ) {
         h ^= *(uint64_t *) ((char *) key + pos ) ;
-        h *= 0x9e3779b97f4a7c15ULL;
+        h *= KNUTH_GOLD_64;
     }
     int n_tail = bytes - pos ;
     if ( n_tail > 0 ) {
         uint64_t tail = 0 ;
         memcpy( &tail, (char *) key + pos, n_tail ) ;
         h ^= tail ;
-        h *= 0x9e3779b97f4a7c15ULL;        
+        h *= KNUTH_GOLD_64;        
     }
 
-    // final avalanche + reduce to 32-bit
-    h ^= h >> 32;
-    h ^= h >> 16;
+    // Reduce to 32 bit, mix high/low 16 bits.
+    h ^= h >> UINT32_WIDTH ;   
+    h ^= h >> UINT16_WIDTH ;
     return (uint32_t)h;
 }
 
@@ -205,7 +211,7 @@ static void setup(IhtCache cache) {
     int capacity = cache->min_capacity;
     if ( capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
 
-    int min_entries = (capacity+1) / cache->max_load_factor - 1;
+    int min_entries = (int) ceil(capacity/cache->max_load_factor) ;
 
     // round up to next power of two for item_count
     int max_entries = 1;
@@ -214,11 +220,11 @@ static void setup(IhtCache cache) {
     cache->item_count = 0;
     cache->max_entries = max_entries;
     cache->entries_mask = max_entries - 1;
-    cache->max_items = max_entries * cache->max_load_factor;
+    cache->max_items = (int) (max_entries * cache->max_load_factor);
 
-    cache->short_key = (cache->key_size < sizeof(IhtCacheFastKey)) ;
-    cache->fast_key = (cache->key_size <= sizeof(IhtCacheFastKey));
-    cache->fast_value = (cache->value_size <= sizeof(IhtCacheFastValue));
+    cache->short_key = (cache->key_size < int_sizeof(IhtCacheFastKey)) ;
+    cache->fast_key = (cache->key_size <= int_sizeof(IhtCacheFastKey));
+    cache->fast_value = (cache->value_size <= int_sizeof(IhtCacheFastValue));
 
     bool fast_mode = cache->fast_mode = cache->fast_key && cache->fast_value ;
     
@@ -230,7 +236,7 @@ static void setup(IhtCache cache) {
         cache->item_size = cache->key_size + cache->value_size ;
         int max_align = alignof(max_align_t) ;
         if ( cache->key_offset < cache->value_offset && !cache->fast_key) {
-            int adj = max_align*(1+(cache->value_size - sizeof(IhtCacheFastValue)-1)/max_align) ;
+            int adj = (int) (max_align*(1+(cache->value_size - sizeof(IhtCacheFastValue)-1)/max_align)) ;
             cache->value_offset += adj ;
             cache->item_size += adj ;
         } else if ( cache->key_offset > cache->value_offset && !cache->fast_value ) {
@@ -247,7 +253,7 @@ static void allocate(IhtCache cache) {
     cache->entries = calloc(cache->max_entries, sizeof(*cache->entries));
     cache->items = calloc(cache->max_items, cache->item_size);
     cache->states = calloc(cache->max_entries, sizeof(*cache->states));
-    int na_size = cache->fast_value ? sizeof(IhtCacheFastValue) : cache->value_size ;
+    int na_size = cache->fast_value ? int_sizeof(IhtCacheFastValue) : cache->value_size ;
     if ( !cache->na_value) cache->na_value = calloc(1, na_size) ;
 }
 

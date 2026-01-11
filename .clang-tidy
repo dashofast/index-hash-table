@@ -2,8 +2,15 @@ Checks: >
   *,
   -clang-analyzer-security.insecureAPI.bzero,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
-  -altera-*
+  -llvmlibc-*,
+  -altera-*,
+  -hicpp-*
   
+CheckOptions:
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: 1
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: 1
 
 
 WarningsAsErrors: ''
