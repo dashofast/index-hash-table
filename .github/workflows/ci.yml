@@ -21,6 +21,9 @@ jobs:
       - name: Build
         run: cmake --build build -j
 
+      - name: clang-tidy
+        run: find src -name '*.c' -print0 | xargs -0 clang-tidy -p build || true
+
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
