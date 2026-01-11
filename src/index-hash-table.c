@@ -36,7 +36,7 @@ static inline bool empty_slot(SlotState slot_state) {
 
 typedef struct iht_entry {
     uint32_t hash_value ;  // cached hash value
-    unsigned int item_index ;
+    int item_index ;
 //    SlotState state:8 ;
 } *IhtEntry ;
 
@@ -98,7 +98,7 @@ static bool use_crc ; // NOLINT(cppcoreguidelines-avoid-non-const-global-variabl
 
 // Accessors
 static inline void *item_addr(IhtCache cache, int item_index) {
-    return ((char*)cache->items) + (cache->item_size*item_index) ;
+    return ((char*)cache->items) + ((ptrdiff_t) cache->item_size*item_index) ;
 }
 
 static inline void *item_value(IhtCache cache, int item_index) {
@@ -129,7 +129,7 @@ static inline bool fast_key_equals(IhtCacheFastKey key1, IhtCacheFastKey key2) {
     return ((key1.v0 ^ key2.v0 ) | (key1.v1 ^ key2.v1)) == 0 ;
 }
 
-static inline unsigned next_entry(IhtCache cache, unsigned index) {
+static inline int next_entry(IhtCache cache, int index) {
     return (index + 1) & cache->entries_mask ;
 }
 
@@ -236,11 +236,11 @@ static void setup(IhtCache cache) {
         cache->item_size = cache->key_size + cache->value_size ;
         int max_align = alignof(max_align_t) ;
         if ( cache->key_offset < cache->value_offset && !cache->fast_key) {
-            int adj = (int) (max_align*(1+(cache->value_size - sizeof(IhtCacheFastValue)-1)/max_align)) ;
+            int adj = max_align*(1+(cache->value_size - int_sizeof(IhtCacheFastValue)-1)/max_align) ;
             cache->value_offset += adj ;
             cache->item_size += adj ;
         } else if ( cache->key_offset > cache->value_offset && !cache->fast_value ) {
-            int adj = max_align*(1+(cache->key_size - sizeof(IhtCacheFastKey)-1)/max_align) ;
+            int adj = max_align*(1+(cache->key_size - int_sizeof(IhtCacheFastKey)-1)/max_align) ;
             cache->key_offset += adj ;
             cache->item_size += adj ;
         }
@@ -278,14 +278,14 @@ static void remove_all(IhtCache cache) {
     }
     cache->item_count = 0;
     bzero(cache->entries, cache->max_entries * sizeof(*cache->entries));
-    bzero(cache->items, cache->max_items * cache->item_size);
     bzero(cache->states, cache->max_entries * sizeof(*cache->states));
+    bzero(cache->items, cache->max_items * (size_t) cache->item_size);
 }
 
 static IhtEntry lookup_entry(IhtCache cache, const void *key) {
     // Logic to look up an entry by key
     unsigned hash = key_hash(cache, key);
-    unsigned index = hash & cache->entries_mask;
+    int index = hash & cache->entries_mask;
     IhtEntry e = entry_addr(cache, index) ;
     cache->stats.lookups++ ;
     int scans = 0 ;
