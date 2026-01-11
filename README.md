@@ -69,7 +69,7 @@ APIs, internal structures, and behavior may change.
 
 The project includes:
 - deterministic unit tests
-- randomized / stress-style tests to validate correctness under load
+- Stress-style tests to validate correctness under load
 
 Test coverage will evolve as the design stabilizes.
 
