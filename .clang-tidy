@@ -1,0 +1,11 @@
+Checks: >
+  *,
+  -clang-analyzer-security.insecureAPI.bzero,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -altera-*
+  
+
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '^(src|include)/'
+FormatStyle: none
