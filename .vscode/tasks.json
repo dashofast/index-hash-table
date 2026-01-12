@@ -12,17 +12,23 @@
       "group": {
         "kind": "test",
         "isDefault": true
-      },
+      }
     },
     {
-      "label": "clang-tidy",
+      "label": "clang-tidy-lib",
       "type": "shell",
       "command": "clang-tidy",
-      "args": [ "-header-filter=.*", "--use-color=false", "src/*.c" ],
+      "args": [
+        "-header-filter=.*",
+        "--use-color=false",
+        "src/*.c"
+      ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "problemMatcher": [ "$gcc" ],
+      "problemMatcher": [
+        "$gcc"
+      ],
       "group": {
         "kind": "build",
         "isDefault": false
@@ -31,17 +37,30 @@
     {
       "label": "clang-tidy-tests",
       "type": "shell",
-      "command": "clang-tidy",
-      "args": [ "-header-filter=.*",  "--use-color=false", "-fno-caret-diagnostics", "tests/*.c" ],
+      "command": "clang-tidy --quiet --header-filter=.* --use-color=false tests/*.c ; sleep 5",
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "problemMatcher": [ "$gcc" ],
+      "problemMatcher": [
+        "$gcc"
+      ],
       "group": {
-        "kind": "build",
+        "kind": "test",
         "isDefault": false
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": true
       }
+    },
+    {
+      "label": "clang-tidy",
+      "dependsOn": [
+        "clang-tidy-lib",
+        "clang-tidy-tests"
+      ],
+      "problemMatcher": []
     }
-
   ]
 }

@@ -35,7 +35,7 @@ static inline double time_hires(void)
 {
     struct timespec ts ;
     clock_gettime(CLOCK_MONOTONIC, &ts) ;
-    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+    double now = (double) ts.tv_sec + (double) ts.tv_nsec * 1e-9 ;
     return now ;
 }
 
