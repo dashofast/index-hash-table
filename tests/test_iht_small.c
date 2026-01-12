@@ -35,7 +35,7 @@ static inline double time_hires(void)
 {
     struct timespec ts ;
     clock_gettime(CLOCK_MONOTONIC, &ts) ;
-    double now = (ts.tv_sec) + (ts.tv_nsec/1e9) ;
+    double now = (double) ts.tv_sec + (double) ts.tv_nsec * 1e-9 ;
     return now ;
 }
 
@@ -50,9 +50,9 @@ static double time_mono(void)
 static void check_test(const char *test_name, double dt, double expected, double result)
 {
     double error = 2*(result - expected)/(expected + result) ;
-    fprintf(stderr, "%s (%.3f seconds): Diff=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+    (void) fprintf(stderr, "%s (%.3f seconds): Diff=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
     if ( fabs(error) > 0.05 ) {
-        fprintf(stderr, "FAILED: %s (%.3f seconds): Error=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
+        (void) fprintf(stderr, "FAILED: %s (%.3f seconds): Error=%.2f (V=%.3f)\n", test_name, dt, 100.0*error, result) ;
         error_count ++ ;
     }
     
@@ -83,9 +83,10 @@ static double test_nop(int N, int R)
 {
     double start_t = time_mono() ;
     double s = 0 ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+r%100, 100+N) ;
+            double x = vv(i+r%BLOCK, BLOCK+N) ;
             double y = mult2(x);
             s += y ;
         }
@@ -100,9 +101,10 @@ static double test_exp(int N, int R)
 {
     double start_t = time_mono() ;
     double s = 0 ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+r%100, 100+N) ;
+            double x = vv(i+r%BLOCK, BLOCK+N) ;
             double y = exp(x) ;
             s += y ;
         }
@@ -135,10 +137,11 @@ void test_cache_nop(int N, int R, double s0, int show_stats)
 {
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), nop_wrapper, NULL);
+    const int BLOCK = 100 ;
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+r%100, 100+N) ;
+            double x = vv(i+r%BLOCK, BLOCK+N) ;
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -154,10 +157,13 @@ void test_cache_exp(int N, int R, double s0, int show_stats )
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
+
+    const int BLOCK = 100 ;
+
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N) ;
+            double x = vv(i+b, BLOCK+N) ;
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -174,10 +180,11 @@ void test_cache_too_small(int N, int R, double s0, int show_stats)
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N/2, sizeof(double), sizeof(double), exp_wrapper, NULL);
     double s = 0 ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N) ;
+            double x = vv(i+b, BLOCK+N) ;
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -196,10 +203,11 @@ void test_cache_high_load(int N, int R, double s0, int show_stats)
     ihtCacheSetMaxLoadFactor(c, 0.9) ;
     ihtCacheReconfigure(c);
     double s = 0 ;
+    const int BLOCK = 100 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N) ;
+            double x = vv(i+b, BLOCK+N) ;
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -214,11 +222,12 @@ void test_cache_shift(int N, int R, double s0, int show_stats)
 {
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    const int BLOCK = 100 ;
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N)+ v_noise(r/10, R/10) ;
+            double x = vv(i+b, BLOCK+N)+ v_noise(r/10, R/10) ;
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -233,11 +242,12 @@ void test_cache_noise(int N, int R, double s0, int show_stats)
 {
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    const int BLOCK = 100 ;
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N) + ((i%10) ? 0.0 : v_noise(r, R));
+            double x = vv(i+b, BLOCK+N) + ((i%10) ? 0.0 : v_noise(r, R));
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -252,11 +262,12 @@ void test_cache_fuzzy(int N, int R, double s0, int show_stats)
 {
     double start_t = time_mono() ;
     IhtCache c = ihtCacheCreate(N, sizeof(double), sizeof(double), exp_wrapper, NULL);
+    const int BLOCK = 100 ;
     double s = 0 ;
     for (int r = 0 ; r<R ; r++ ) {
-        int b = r%100 ;
+        int b = r%BLOCK ;
         for (int i=0 ; i<N ; i++ ) {
-            double x = vv(i+b, 100+N) + ((i%3) ? 0.0 : v_noise(r, R));
+            double x = vv(i+b, BLOCK+N) + ((i%3) ? 0.0 : v_noise(r, R));
             double *y = ihtCacheGet(c, &x) ;
             s += *y ;
         }
@@ -296,15 +307,16 @@ int main(int argc, char **argv) {
                 show_stats = 2 ;
                 break ;
             case 't':
+                free(test_select) ;
                 test_select = strdup(optarg) ;
                 break ;
             default:
-                fprintf(stderr, "Unknown option: %c\n", optopt) ;
+                (void) fprintf(stderr, "Unknown option: %c\n", optopt) ;
                 exit(2) ;
         }
     }
     
-    fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
+    (void) fprintf(stderr, "Test IHT Fast Cache (N=%d,R=%d)\n", N, R) ;
     double nop_result = test_nop(N, R) ;
     double exp_result = test_exp(N, R) ;
     if ( run_test('A', test_select) ) test_cache_nop(N, R, nop_result, show_stats) ;

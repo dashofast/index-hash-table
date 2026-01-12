@@ -4,6 +4,9 @@ Checks: >
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -readability-braces-around-statements,
   -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cert, cert-err33-c, cert-int30-c, cert-int31-c,
   -llvmlibc-*,
   -llvm-include-order,
   -altera-*,
@@ -16,6 +19,12 @@ CheckOptions:
     value: 1
   - key: readability-identifier-length.MinimumLoopCounterNameLength
     value: 1
+  - key: readability-magic-numbers.IgnoredIntegerValues
+    value: '1;2;3;10;100;1000'
+  - key: readability-magic-numbers.IgnoredFloatingPointValues
+    value: '1e-9;1e-6;0.001;0.01;0.1;0.5;1.0;2.0;3.0;10.0;100.0;1000.0;1e6,1e9'
+  - key: IgnorePowersOf2IntegerValues
+    value: true
 
 
 
