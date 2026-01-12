@@ -19,6 +19,7 @@
       "type": "shell",
       "command": "clang-tidy",
       "args": [
+        "-p", "build",
         "-header-filter=.*",
         "--use-color=false",
         "src/*.c"
@@ -37,7 +38,7 @@
     {
       "label": "clang-tidy-tests",
       "type": "shell",
-      "command": "clang-tidy --quiet --header-filter=.* --use-color=false tests/*.c ; sleep 5",
+      "command": "clang-tidy -p build --quiet --header-filter=.* --use-color=false tests/*.c ; sleep 5",
       "options": {
         "cwd": "${workspaceFolder}"
       },
